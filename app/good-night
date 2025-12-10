@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Good Night – Gentle Wake</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  html,body{
+    margin:0;padding:0;height:100%;
+    font-family:"Comic Sans MS","Poppins",sans-serif;
+    text-align:center;
+    background:linear-gradient(180deg,#1a1a40,#000000);
+    color:#fff;overflow:hidden;
+    animation:bgPulse 20s ease-in-out infinite alternate;
+  }
+  @keyframes bgPulse{
+    0%{background:linear-gradient(180deg,#1a1a40,#000000);}
+    100%{background:linear-gradient(180deg,#2e1a55,#1a0033);}
+  }
+  .frame{
+    position:absolute;top:50%;left:50%;
+    transform:translate(-50%,-50%);
+    width:90%;max-width:480px;
+    padding:30px 20px;
+    background:radial-gradient(circle at center,rgba(255,255,255,0.08),rgba(255,255,255,0.02));
+    border-radius:25px;box-shadow:0 0 35px rgba(255,255,255,0.1);
+  }
+  h1{margin:0 0 10px;font-size:2em;}
+  .suggestion{
+    margin:20px auto;padding:18px;
+    font-size:1.2em;
+    background:rgba(255,255,255,0.12);
+    border-radius:15px;max-width:400px;
+    transition:opacity 0.6s ease;
+  }
+  label{display:block;margin-top:10px;}
+  input,select{
+    padding:6px;border-radius:8px;border:none;
+    font-size:1em;text-align:center;
+  }
+  button{
+    background:#7c5cff;border:none;color:white;
+    border-radius:14px;padding:10px 20px;margin:8px;
+    font-size:1em;cursor:pointer;
+    transition:all 0.4s ease;
+  }
+  button:hover{background:#9c7cff;box-shadow:0 0 10px rgba(255,255,255,0.3);}
+  .modal{
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.75);display:none;
+    align-items:center;justify-content:center;
+  }
+  .modal-content{
+    background:rgba(255,255,255,0.1);
+    padding:30px;border-radius:20px;font-size:1.3em;
+    color:#fff;box-shadow:0 0 20px rgba(255,255,255,0.2);
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <h1>🌙 Good Night</h1>
+  <div class="suggestion" id="suggestionBox"></div>
+  <button onclick="fadeSuggestion()">💭 New Suggestion</button>
+
+  <label>Bedtime Alarm:</label>
+  <input type="time" id="bedtime">
+  <label>Wake-up Alarm:</label>
+  <input type="time" id="wakeup">
+
+  <label>Frequency:</label>
+  <select id="freqSel">
+    <option value="432">432 Hz</option>
+    <option value="528">528 Hz (Love)</option>
+    <option value="639">639 Hz (Harmony)</option>
+  </select>
+
+  <label>Duration:</label>
+  <select id="durSel">
+    <option value="3">3 s</option>
+    <option value="5" selected>5 s</option>
+    <option value="10">10 s</option>
+  </select>
+
+  <button onclick="playTone()">Play Tone</button>
+  <button onclick="gentleWake()">🌅 Gentle Wake Mode</button>
+  <button onclick="sleepFade()">🌌 Sleep Fade Mode</button>
+</div>
+
+<div class="modal" id="modal"><div class="modal-content" id="modalText"></div></div>
+
+<script>
+const suggestions=[
+  "💤 Try 4-7-8 breathing: inhale 4 s, hold 7, exhale 8.",
+  "🧘 Sit quietly for a few minutes; let thoughts drift like clouds.",
+  "🙏 Whisper a short prayer of gratitude for today.",
+  "🌊 Imagine waves carrying away every bit of stress.",
+  "✨ Count ten things you love before sleep.",
+  "🌺 Breathe in peace, breathe out release.",
+  "💫 Picture yourself wrapped in gentle starlight."
+];
+
+function showSuggestion(){
+  const box=document.getElementById('suggestionBox');
+  box.textContent=suggestions[Math.floor(Math.random()*suggestions.length)];
+}
+function fadeSuggestion(){
+  const box=document.getElementById('suggestionBox');
+  box.style.opacity=0;
+  setTimeout(()=>{showSuggestion();box.style.opacity=1;},600);
+}
+showSuggestion();
+
+let alarms={};
+function loadSaved(){
+  const saved=JSON.parse(localStorage.getItem('alarms')||'{}');
+  alarms=saved;
+  if(saved.bedtime) document.getElementById('bedtime').value=saved.bedtime;
+  if(saved.wakeup) document.getElementById('wakeup').value=saved.wakeup;
+}
+function saveAlarms(){localStorage.setItem('alarms',JSON.stringify(alarms));}
+loadSaved();
+
+document.getElementById('bedtime').addEventListener('change',e=>{
+  alarms.bedtime=e.target.value;saveAlarms();
+});
+document.getElementById('wakeup').addEventListener('change',e=>{
+  alarms.wakeup=e.target.value;saveAlarms();
+});
+
+function checkAlarms(){
+  const now=new Date();
+  const current=now.getHours().toString().padStart(2,'0')+":"+now.getMinutes().toString().padStart(2,'0');
+  if(current===alarms.bedtime){openModal("🌙 Time to rest. Sweet dreams.");sleepFade();}
+  if(current===alarms.wakeup){openModal("☀️ Good morning! Rise gently.");gentleWake();}
+}
+setInterval(checkAlarms,60000);
+
+function openModal(msg){
+  const m=document.getElementById('modal');
+  document.getElementById('modalText').textContent=msg;
+  m.style.display="flex";
+  setTimeout(()=>m.style.display="none",8000);
+}
+
+// base tone with fade
+function playTone(freq,dur){
+  freq=freq||parseFloat(document.getElementById('freqSel').value);
+  dur=dur||parseFloat(document.getElementById('durSel').value);
+  const ctx=new (window.AudioContext||window.webkitAudioContext)();
+  const osc=ctx.createOscillator();
+  const gain=ctx.createGain();
+  osc.type="sine";osc.frequency.value=freq;
+  osc.connect(gain);gain.connect(ctx.destination);
+  const now=ctx.currentTime;
+  gain.gain.setValueAtTime(0,now);
+  gain.gain.linearRampToValueAtTime(0.2,now+1);
+  gain.gain.linearRampToValueAtTime(0,now+dur);
+  osc.start();osc.stop(now+dur);
+}
+
+// gentle wake sequence
+function gentleWake(){
+  const freq=parseFloat(document.getElementById('freqSel').value);
+  const ctx=new (window.AudioContext||window.webkitAudioContext)();
+  const osc=ctx.createOscillator();
+  const gain=ctx.createGain();
+  osc.type="sine";
+  osc.frequency.setValueAtTime(freq,ctx.currentTime);
+  osc.frequency.linearRampToValueAtTime(freq+30,ctx.currentTime+60);
+  osc.connect(gain);gain.connect(ctx.destination);
+  gain.gain.setValueAtTime(0,ctx.currentTime);
+  gain.gain.linearRampToValueAtTime(0.25,ctx.currentTime+30);
+  gain.gain.linearRampToValueAtTime(0,ctx.currentTime+60);
+  osc.start();
+  osc.stop(ctx.currentTime+60);
+  // stop when user interacts
+  window.onmousemove=window.onclick=()=>{osc.stop();window.onmousemove=window.onclick=null;}
+}
+
+// sleep fade sequence
+function sleepFade(){
+  const freq=parseFloat(document.getElementById('freqSel').value);
+  const ctx=new (window.AudioContext||window.webkitAudioContext)();
+  const osc=ctx.createOscillator();
+  const gain=ctx.createGain();
+  osc.type="sine";
+  osc.frequency.setValueAtTime(freq,ctx.currentTime);
+  osc.frequency.linearRampToValueAtTime(freq-40,ctx.currentTime+60);
+  osc.connect(gain);gain.connect(ctx.destination);
+  gain.gain.setValueAtTime(0.2,ctx.currentTime);
+  gain.gain.linearRampToValueAtTime(0,ctx.currentTime+60);
+  osc.start();
+  osc.stop(ctx.currentTime+60);
+  window.onmousemove=window.onclick=()=>{osc.stop();window.onmousemove=window.onclick=null;}
+}
+</script>
+</body>
+</html>

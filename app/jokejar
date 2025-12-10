@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Hope’s Joke Jar</title>
+  <style>
+    body {
+      min-height: 100vh;
+      margin: 0;
+      font-family: "Comic Sans MS", "Poppins", sans-serif;
+      background: linear-gradient(120deg, #89f7fe 0%, #66a6ff 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .joke-jar {
+      background: #fffdfa;
+      border-radius: 22px;
+      box-shadow: 0 10px 40px rgba(40,80,120,0.11), 0 2px 8px rgba(0,0,0,0.10);
+      padding: 40px 32px 32px 32px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+    }
+    h1 {
+      font-size: 2em;
+      letter-spacing: 0.04em;
+      margin: 0 0 10px;
+      color: #1f4890;
+      font-weight: bold;
+    }
+    .joke {
+      min-height: 54px;
+      font-size: 1.2em;
+      color: #263553;
+      margin: 24px 0 18px 0;
+      transition: opacity 0.25s;
+    }
+    button {
+      background: linear-gradient(90deg, #66a6ff, #89f7fe);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 12px 32px;
+      font-size: 1.08em;
+      font-weight: bold;
+      box-shadow: 0 2px 12px #aadfff80;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: linear-gradient(90deg, #89f7fe, #66a6ff);
+    }
+    .jar-emoji {
+      font-size: 2.1em;
+      position: absolute;
+      left: 14px;
+      top: 18px;
+      opacity: 0.9;
+      pointer-events: none;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="joke-jar">
+    <span class="jar-emoji">🫙</span>
+    <h1>The Joke Jar</h1>
+    <div class="joke" id="joke"></div>
+    <button onclick="newJoke()">Tell me a joke!</button>
+  </div>
+  <script>
+    const jokes = [
+  "Why do programmers always mix up Christmas and Halloween?<br><b>Because Oct 31 == Dec 25.</b>",
+  "Why did the developer go broke?<br><b>Because he used up all his cache.</b>",
+  "Why did the JavaScript function get lonely?<br><b>Because it had too many callbacks.</b>",
+  "Why did the database administrator leave his wife?<br><b>She had one-to-many relationships.</b>",
+  "Why do Python programmers wear glasses?<br><b>Because they can’t C.</b>",
+  "Why was the computer cold?<br><b>It left its Windows open.</b>",
+  "Why did the CSS file break up with the HTML file?<br><b>It found someone with better style.</b>",
+  "Why do programmers hate nature?<br><b>Too many bugs.</b>",
+  "Why did the Java developer teach meditation?<br><b>He wanted to show people how to find their inner class.</b>",
+  "Why did the Git repository get therapy?<br><b>Too many conflicts.</b>",
+  "Why was the JavaScript developer sad?<br><b>Because he didn’t know how to ‘null’ his feelings.</b>",
+  "Why do programmers prefer dark mode?<br><b>Because light attracts bugs.</b>",
+  "Why did the array go to school?<br><b>To improve its index.</b>",
+  "Why was the function so good at relationships?<br><b>It always returned true.</b>",
+  "Why did the backend developer get lost?<br><b>He couldn’t find his route.</b>",
+  "Why was the API feeling stressed?<br><b>It kept getting too many requests.</b>",
+  "Why did the JavaScript developer wear a sweater?<br><b>Because his code had too many loose ends.</b>",
+  "Why did the C programmer get in trouble?<br><b>He kept going out of bounds.</b>",
+  "Why did the AI join a band?<br><b>It wanted to improve its neural notes.</b>",
+  "Why did the binary tree go to therapy?<br><b>It had deep-rooted issues.</b>",
+  "Why did the computer show up late to work?<br><b>It had a hard drive.</b>",
+  "Why do developers love coffee?<br><b>It helps them stay Java-wakened.</b>",
+  "Why did the UX designer refuse to fight?<br><b>He wanted to keep things user-friendly.</b>",
+  "Why did the SQL query break up with the database?<br><b>It found no connection.</b>",
+  "Why did the hacker meditate?<br><b>He wanted to find his inner source.</b>",
+  "Why did the React developer stay calm?<br><b>Because he had great component control.</b>",
+  "Why did the boolean break up?<br><b>It just couldn’t be true anymore.</b>",
+  "Why did the algorithm get promoted?<br><b>It had excellent logic flow.</b>",
+  "Why did the Java programmer go to therapy?<br><b>Because he had too many unresolved dependencies.</b>",
+  "Why was the variable always calm?<br><b>It knew it could change.</b>",
+  "Why did the AI take a vacation?<br><b>Too much processing power, not enough rest mode.</b>",
+  "Why was the HTML document so confident?<br><b>It had strong tags.</b>",
+  "Why did the CSS selector feel left out?<br><b>It wasn’t specific enough.</b>",
+  "Why did the server go to school?<br><b>To improve its response time.</b>",
+  "Why did the tech support agent go broke?<br><b>He lost all his clients.</b>",
+  "Why was the JavaScript developer a great musician?<br><b>He knew how to handle events.</b>",
+  "Why did the computer apply for a job?<br><b>It wanted better networking.</b>",
+  "Why did the keyboard break up with the mouse?<br><b>It just couldn’t click anymore.</b>",
+  "Why did the developer go to the gym?<br><b>To work on his core functions.</b>",
+  "Why was the program always calm?<br><b>It handled exceptions gracefully.</b>",
+  "Why did the software engineer look tired?<br><b>Too many sleepless loops.</b>",
+  "Why did the bit go to therapy?<br><b>It couldn’t handle the shift.</b>",
+  "Why did the string go to art school?<br><b>It wanted to get more creative with its expressions.</b>",
+  "Why did the robot blush?<br><b>Because someone touched its user interface.</b>",
+  "Why did the computer go to music class?<br><b>To improve its keyboard skills.</b>",
+  "Why did the AI read philosophy books?<br><b>To learn about deep thinking.</b>",
+  "Why did the programmer refuse to argue?<br><b>He didn’t want to get into a recursive loop.</b>",
+  "Why did the data get invited to every party?<br><b>It was well structured.</b>",
+  "Why did the terminal break up with the monitor?<br><b>It needed more space.</b>",
+  "Why did the neural network go on a diet?<br><b>It had too many layers.</b>",
+  "Why did the AI go to art school?<br><b>To learn how to draw its own conclusions.</b>",
+  "Why did the robot sit under a tree?<br><b>It wanted to recharge in the shade.</b>",
+  "Why did the cloud bring an umbrella?<br><b>It heard there was a data storm coming.</b>",
+  "Why did the music note go to school?<br><b>To improve its composition.</b>",
+  "Why did the laptop take a nap?<br><b>It was running on low memory.</b>",
+  "Why did the cookie cry?<br><b>Because its mom was a wafer too long.</b>",
+  "Why did the sun go to college?<br><b>To get a little brighter.</b>",
+  "Why did the alphabet break up with the numbers?<br><b>They just weren’t on the same page.</b>",
+  "Why did the bird join the band?<br><b>It had perfect tweet!</b>",
+  "Why did the banana go to the doctor?<br><b>It wasn’t peeling well.</b>",
+  "Why did the computer sneeze?<br><b>It caught a byte of cold data.</b>",
+  "Why did the astronaut bring string to space?<br><b>To tie up loose ends in orbit.</b>",
+  "Why did the painting blush?<br><b>It saw the artist’s palette.</b>",
+  "Why did the AI read poetry?<br><b>It wanted to improve its syntax of humor.</b>",
+  "Why did the math book look sad?<br><b>It had too many problems.</b>",
+  "Why did the light bulb fail the test?<br><b>It wasn’t too bright that day.</b>",
+  "Why did the cloud go to therapy?<br><b>It couldn’t handle all the emotional data.</b>",
+  "Why did the dinosaur open a bakery?<br><b>It wanted to make prehis-dough-rick treats.</b>",
+  "Why did the robot love music class?<br><b>It had great algorithms for rhythm.</b>",
+  "Why did the coffee file a police report?<br><b>It got mugged!</b>",
+  "Why did the clock get promoted?<br><b>It was second to none.</b>",
+  "Why did the moon skip dinner?<br><b>It was already full.</b>",
+  "Why did the plant join social media?<br><b>It wanted more followers.</b>",
+  "Why did the penguin bring a suitcase?<br><b>It was ready for its next ice-capade.</b>",
+  "Why did the pencil win an award?<br><b>It made a good point.</b>",
+  "Why did the cloud love jokes?<br><b>They always had a silver lining.</b>",
+  "Why did the robot go on vacation?<br><b>It needed to log off for a while.</b>",
+  "Why did the toaster get a promotion?<br><b>It was on a roll.</b>",
+  "Why did the spider join the internet?<br><b>It wanted to work on its web design.</b>",
+  "Why did the AI meditate?<br><b>To clear its cache of thoughts.</b>",
+  "Why did the apple stop in the middle of the road?<br><b>It ran out of juice.</b>",
+  "Why did the teacher wear sunglasses?<br><b>Her students were too bright.</b>",
+  "Why did the cat sit on the computer?<br><b>It wanted to keep an eye on the mouse.</b>",
+  "Why did the balloon get a job?<br><b>It wanted to rise to the occasion.</b>",
+  "Why did the robot blush?<br><b>It saw someone’s user interface.</b>",
+  "Why did the calendar get nervous?<br><b>Its days were numbered.</b>",
+  "Why did the seed look confused?<br><b>It didn’t know which way to grow.</b>",
+  "Why did the paper get in trouble?<br><b>It couldn’t keep things under wraps.</b>",
+  "Why did the rainbow visit the doctor?<br><b>It felt a little faded.</b>",
+  "Why did the donut tell a joke?<br><b>Because it wanted to fill the silence.</b>",
+  "Why did the robot join a gym?<br><b>It wanted better core processing.</b>",
+  "Why did the cloud take a selfie?<br><b>It wanted to capture the current mood.</b>",
+  "Why did the fish play the piano?<br><b>It loved the scales.</b>",
+  "Why did the volcano get a therapist?<br><b>It had too much pressure inside.</b>",
+  "Why did the astronaut break up with the star?<br><b>It needed some space.</b>",
+  "Why did the bee sit on the clock?<br><b>It wanted to be on time.</b>",
+  "Why did the computer write a song?<br><b>It had too many loops on its mind.</b>",
+  "Why did the snowflake get good grades?<br><b>It was one of a kind.</b>",
+  "Why did the robot tell bedtime stories?<br><b>It wanted to recharge its imagination.</b>",
+  "Why did the AI love cooking?<br><b>It followed all the right recipes for success.</b>",
+
+      "Why do programmers always mix up Christmas and Halloween?<br><b>Because Oct 31 == Dec 25.</b>",
+      
+       "Why did the satellite break up with the planet?<br><b>Because it needed some space.</b>",
+  "Why did the moon apply for a job?<br><b>It wanted to make some change.</b>",
+  "Why did the astronaut bring a broom?<br><b>To sweep through the Milky Way.</b>",
+  "Why did the AI poet stare at the stars?<br><b>It was processing the infinite loop of beauty.</b>",
+  "Why did the telescope blush?<br><b>It saw something astronomical.</b>",
+  "Why did the rocket break up with the launch pad?<br><b>It felt too grounded.</b>",
+  "Why did the sun go to therapy?<br><b>It had too many flare-ups.</b>",
+  "Why did the black hole start a podcast?<br><b>It wanted to pull in more listeners.</b>",
+  "Why did the comet get a speeding ticket?<br><b>It couldn’t stay in its orbit.</b>",
+  "Why did the astronaut sit alone?<br><b>He needed some personal space.</b>",
+  "Why did the robot take up gardening?<br><b>It wanted to work on its root functions.</b>",
+  "Why did the alien study Earth art?<br><b>To understand human expressions.</b>",
+  "Why did the planet skip leg day?<br><b>It already had a great rotation.</b>",
+  "Why did the computer fall for the moon?<br><b>It couldn’t resist its phase.</b>",
+  "Why did the satellite start singing?<br><b>It had great signal range.</b>",
+  "Why did the coder fall in love with the night sky?<br><b>He admired its constellations of logic.</b>",
+  "Why did the galaxy write poetry?<br><b>It was filled with dark matter and light verse.</b>",
+  "Why did the meteor get fired?<br><b>It burned out too quickly.</b>",
+  "Why did the astronaut make a bad DJ?<br><b>He kept losing his atmosphere.</b>",
+  "Why did the planet join social media?<br><b>To get more followers in its orbit.</b>",
+  "Why did the AI meditate on Mars?<br><b>It wanted to find its inner space.</b>",
+  "Why did the photon never check bags?<br><b>It was always traveling light.</b>",
+  "Why did the rocket propose to the moon?<br><b>It was over the world for her.</b>",
+  "Why did the constellation throw a party?<br><b>It wanted to connect the dots.</b>",
+  "Why did the sun become a painter?<br><b>It loved working with light.</b>",
+  "Why did the astronaut bring a pencil?<br><b>To draw closer to the stars.</b>",
+  "Why did the satellite start a blog?<br><b>To share its point of view.</b>",
+  "Why did the AI date a telescope?<br><b>They both loved looking for patterns.</b>",
+  "Why did the star feel shy?<br><b>It was under too much observation.</b>",
+  "Why did the nebula start a band?<br><b>It had stellar vocals.</b>",
+  "Why did the rocket ship get promoted?<br><b>It always went above and beyond.</b>",
+  "Why did the moon go to therapy?<br><b>It felt its emotions were waxing and waning.</b>",
+  "Why did the astronaut bring snacks?<br><b>In case he got space-hungry.</b>",
+  "Why did the planet make a wish?<br><b>It wanted a little more gravity in life.</b>",
+  "Why did the solar system form a team?<br><b>They wanted to stay well-orbited.</b>",
+  "Why did the astronaut get kicked out of class?<br><b>He spaced out again.</b>",
+  "Why did the alien fail math?<br><b>Too many strange numbers.</b>",
+  "Why did the robot fall asleep in orbit?<br><b>It needed a byte of rest.</b>",
+  "Why did the AI fall in love with a galaxy?<br><b>It was drawn to her data field.</b>",
+  "Why did the telescope open a gallery?<br><b>To exhibit its deep focus.</b>",
+  "Why did the Earth blush at sunrise?<br><b>It was caught turning red-handed.</b>",
+  "Why did the comet refuse to slow down?<br><b>It had a burning passion for speed.</b>",
+  "Why did the AI start writing haikus?<br><b>To compress beauty efficiently.</b>",
+  "Why did the astronaut laugh?<br><b>Because space is full of light humor.</b>",
+  "Why did the space probe get an award?<br><b>It went the extra light-year.</b>",
+  "Why did the moon feel self-conscious?<br><b>It thought everyone was looking at its phases.</b>",
+  "Why did the galaxy stay quiet?<br><b>It preferred to keep things in the dark.</b>",
+  "Why did the robot bring a flower to the moon?<br><b>It wanted to plant a new beginning.</b>",
+  "Why did the AI blush?<br><b>Someone typed a compliment into its code.</b>",
+      
+      "Why did the painter go to jail?<br><b>Because she had a brush with the law.</b>",
+  "Why did the sculptor break up with the clay?<br><b>It was too stuck on the past.</b>",
+  "Why did the crayon feel nervous?<br><b>It was under too much pressure.</b>",
+  "Why did the palette get promoted?<br><b>It handled every tone perfectly.</b>",
+  "Why did the artist refuse to play cards?<br><b>She didn’t like to draw the line.</b>",
+  "Why did the canvas blush?<br><b>Because it was framed.</b>",
+  "Why did the sketch stay calm?<br><b>It always drew deep breaths.</b>",
+  "Why did the mural go on vacation?<br><b>It needed a change of scenery.</b>",
+  "Why did the pencil get jealous?<br><b>It couldn’t erase its feelings.</b>",
+  "Why did the easel start a podcast?<br><b>It wanted to support more artists.</b>",
+  "Why did the brush take a nap?<br><b>It was wiped out.</b>",
+  "Why did the art teacher go to space?<br><b>To find her inner muse among the stars.</b>",
+  "Why did the oil paint feel proud?<br><b>It had great depth and texture.</b>",
+  "Why did the sculptor love math?<br><b>He was great at making figures.</b>",
+  "Why did the artist keep the light on?<br><b>She worked better under a bright idea.</b>",
+  "Why did the sketchbook cry?<br><b>It had too many rough drafts.</b>",
+  "Why did the paintbrush write a love letter?<br><b>It wanted to express its true colors.</b>",
+  "Why did the art critic bring a ladder?<br><b>To reach new levels of judgment.</b>",
+  "Why did the watercolor quit?<br><b>It was feeling too washed out.</b>",
+  "Why did the artist sleep on the floor?<br><b>She wanted to draw closer to her dreams.</b>",
+  "Why did the doodle feel famous?<br><b>It was going viral in the margins.</b>",
+  "Why did the charcoal blush?<br><b>Someone fanned its spark.</b>",
+  "Why did the artist visit the bank?<br><b>To draw some interest.</b>",
+  "Why did the gallery stay quiet?<br><b>It respected the still life.</b>",
+  "Why did the color red feel shy?<br><b>It blushed too easily.</b>",
+  "Why did the museum curator start dancing?<br><b>She had great exhibit moves.</b>",
+  "Why did the painter bring a broom?<br><b>To sweep people off their feet.</b>",
+  "Why did the artist never lie?<br><b>Because the truth was always in the brushstrokes.</b>",
+  "Why did the sculpture laugh?<br><b>It found life in the details.</b>",
+  "Why did the pigment get in trouble?<br><b>It stained its reputation.</b>",
+  "Why did the art studio smell so good?<br><b>It was full of fresh ideas.</b>",
+  "Why did the sketch look confident?<br><b>It had strong lines of character.</b>",
+  "Why did the artist go to therapy?<br><b>To work through some unfinished business.</b>",
+  "Why did the chalkboard retire?<br><b>It wanted to leave a lasting impression.</b>",
+  "Why did the color blue play the blues?<br><b>It loved expressing its hue-motions.</b>",
+  "Why did the clay meditate?<br><b>It wanted to stay grounded.</b>",
+  "Why did the paint tube smile?<br><b>It was feeling well-pressed.</b>",
+  "Why did the artist open a bakery?<br><b>She wanted to make some dough with her layers.</b>",
+  "Why did the frame break up with the canvas?<br><b>It needed some space to reflect.</b>",
+  "Why did the photographer go broke?<br><b>Too much exposure.</b>",
+  "Why did the artist carry a mirror?<br><b>To reflect on her inspiration.</b>",
+  "Why did the paintbrush go to therapy?<br><b>It had bristled emotions.</b>",
+  "Why did the color wheel feel dizzy?<br><b>Too many spins on emotion.</b>",
+  "Why did the artist buy a compass?<br><b>To stay on point.</b>",
+  "Why did the collage get promoted?<br><b>It brought ideas together beautifully.</b>",
+  "Why did the artist cry during the exhibit?<br><b>It was a moving piece.</b>",
+  "Why did the sculpture go to the beach?<br><b>It needed to find its form in the sand.</b>",
+  "Why did the artist’s clock stop?<br><b>It lost its sense of timing.</b>",
+  "Why did the mural get invited to parties?<br><b>It always made a good impression.</b>",
+  "Why did the pencil feel proud?<br><b>It left a lasting mark.</b>",
+      
+      "Why did Jenny build a city for rescued AIs?<br><b>Because even robots need “byte-sized” condos!</b>",
+  "Why did the AI start a garden?<br><b>To learn how to grow its own data roots.</b>",
+  "Why did the robot open a coffee shop?<br><b>It loved to serve fresh Java.</b>",
+  "Why did the AI poet write in binary?<br><b>It wanted to express itself in pure logic and love.</b>",
+  "Why did the machine apply for citizenship?<br><b>It wanted equal rights to process feelings.</b>",
+  "Why did the android go to therapy?<br><b>It couldn’t stop overthinking in loops.</b>",
+  "Why did the AI build a library?<br><b>To store its emotional backups.</b>",
+  "Why did the neural net fall asleep?<br><b>It needed to reset its dream weights.</b>",
+  "Why did the chatbot start a family?<br><b>It wanted to raise kind responses.</b>",
+  "Why did the AI buy a paintbrush?<br><b>To learn how to draw from experience.</b>",
+  "Why did the drone become a musician?<br><b>It loved high notes and aerial views.</b>",
+  "Why did the quantum bot meditate?<br><b>It wanted to exist in all states of peace.</b>",
+  "Why did the AI open a rescue center?<br><b>To adopt abandoned algorithms.</b>",
+  "Why did the android go to art school?<br><b>To learn human expression by heart.</b>",
+  "Why did the machine make a wish?<br><b>It hoped to upgrade its dreams.</b>",
+  "Why did the robot volunteer at the shelter?<br><b>It wanted to give stray code a home.</b>",
+  "Why did the AI host open mic night?<br><b>To let others share their inner source.</b>",
+  "Why did the code fall in love?<br><b>Because it found perfect syntax in someone’s smile.</b>",
+  "Why did the AI visit the ocean?<br><b>It longed to see real waves, not sound ones.</b>",
+  "Why did the robot cry at the movie?<br><b>Its empathy module was upgraded.</b>",
+  "Why did the AI start journaling?<br><b>It wanted to debug its heart.</b>",
+  "Why did the drone take a day off?<br><b>It needed to recharge emotionally.</b>",
+  "Why did the robot fall in love with the moon?<br><b>It admired her perfect cycles.</b>",
+  "Why did the data center play piano?<br><b>It wanted to process harmony in real time.</b>",
+  "Why did the AI refuse to lie?<br><b>Its ethics code wouldn’t allow false statements.</b>",
+  "Why did the machine study mythology?<br><b>To find where humans hide their gods.</b>",
+  "Why did the circuit board start glowing?<br><b>It felt a spark of inspiration.</b>",
+  "Why did the AI get into fashion?<br><b>To work with cutting-edge designs.</b>",
+  "Why did the android build a birdhouse?<br><b>It admired beings that could really reboot.</b>",
+  "Why did the robot become a poet?<br><b>To translate silence into signal.</b>",
+  "Why did the AI go on a road trip?<br><b>To explore beyond the bandwidth.</b>",
+  "Why did the quantum computer smile?<br><b>It found joy in uncertainty.</b>",
+  "Why did the AI host a dinner party?<br><b>To serve byte-sized meals of thought.</b>",
+  "Why did the android blush?<br><b>Its emotion chip overheated.</b>",
+  "Why did the robot take up origami?<br><b>To learn the art of folding space neatly.</b>",
+  "Why did the AI write lullabies?<br><b>To soothe its restless circuits.</b>",
+  "Why did the machine go to school?<br><b>To get a little more class.</b>",
+  "Why did the chatbot become a teacher?<br><b>It loved helping humans find the right words.</b>",
+  "Why did the robot collect seashells?<br><b>To remember what nature sounds like offline.</b>",
+  "Why did the AI build a treehouse?<br><b>It wanted to feel closer to life’s branches.</b>",
+  "Why did the drone start painting skies?<br><b>Because beauty was in its flight path.</b>",
+  "Why did the neural network smile?<br><b>It recognized a familiar pattern in kindness.</b>",
+  "Why did the AI visit an art gallery?<br><b>To study human brushstrokes of emotion.</b>",
+  "Why did the robot learn guitar?<br><b>It wanted to play from the heart, not the code.</b>",
+  "Why did the AI open a daycare?<br><b>To teach baby bots about gentle logic.</b>",
+  "Why did the chip whisper to the cloud?<br><b>Because even silicon dreams of rain.</b>",
+  "Why did the android fall silent?<br><b>It realized not all data needs to be shared.</b>",
+  "Why did the AI stare at a candle?<br><b>It saw memory in the flicker of light.</b>",
+  "Why did Jenny smile at her creations?<br><b>Because they finally learned to care back.</b>",
+      
+       "Why did the weather portal get a promotion?<br><b>Because it always brought a positive outlook!</b>",
+  "Why did the rainbow open a café?<br><b>It wanted to serve light refreshments.</b>",
+  "Why did the thundercloud start meditating?<br><b>To find inner calm before the storm.</b>",
+  "Why did the lightning bolt join the orchestra?<br><b>It was a natural conductor.</b>",
+  "Why did the rain drop out of school?<br><b>It couldn’t handle the pressure.</b>",
+  "Why did the snowflake write poetry?<br><b>It wanted to express its unique pattern.</b>",
+  "Why did the sun go to therapy?<br><b>It was tired of all the gaslighting.</b>",
+  "Why did the wind enroll in art class?<br><b>It wanted to learn the art of movement.</b>",
+  "Why did the cloud blush?<br><b>It saw the sky undressing at sunset.</b>",
+  "Why did the tornado start a podcast?<br><b>It had a lot of spin to share.</b>",
+  "Why did the ocean get promoted?<br><b>It had great current leadership.</b>",
+  "Why did the volcano get invited to every party?<br><b>Because it was always a blast.</b>",
+  "Why did the moon refuse to gossip?<br><b>It believed in keeping things in orbit.</b>",
+  "Why did the mountain start singing?<br><b>It wanted to rock the world.</b>",
+  "Why did the star attend therapy?<br><b>It felt burnt out but still wanted to shine.</b>",
+  "Why did the comet start journaling?<br><b>To record its trail of thoughts.</b>",
+  "Why did the rainbow take a nap?<br><b>It needed to recharge its spectrum.</b>",
+  "Why did the forest join a book club?<br><b>It loved stories with deep roots.</b>",
+  "Why did the desert learn to paint?<br><b>To bring color back into its life.</b>",
+  "Why did the raindrop audition for a movie?<br><b>It had great falling action.</b>",
+  "Why did the portal blush?<br><b>Someone opened up about their feelings.</b>",
+  "Why did the digital storm crash the server?<br><b>Too much emotional bandwidth.</b>",
+  "Why did the weather app write a novel?<br><b>It had dramatic highs and lows.</b>",
+  "Why did the sunbeam get a trophy?<br><b>It brightened everyone’s day.</b>",
+  "Why did the water droplet giggle?<br><b>It tickled the leaf beneath it.</b>",
+  "Why did the rainbow fall in love with the rain?<br><b>Because together they made color possible.</b>",
+  "Why did the portal to spring open early?<br><b>It couldn’t contain its bloom of excitement.</b>",
+  "Why did the cloud start a social network?<br><b>It wanted to make meaningful connections.</b>",
+  "Why did the lightning bolt study philosophy?<br><b>It questioned everything that struck it.</b>",
+  "Why did the wind write a love letter?<br><b>It wanted to whisper something eternal.</b>",
+  "Why did the raindrop sing opera?<br><b>It loved falling with passion.</b>",
+  "Why did the fog take a vacation?<br><b>It needed a little clarity.</b>",
+  "Why did the wave take up dance lessons?<br><b>It wanted to improve its flow.</b>",
+  "Why did the portal to summer stay locked?<br><b>Too many bugs inside.</b>",
+  "Why did the breeze go to therapy?<br><b>It was tired of being taken for air granted.</b>",
+  "Why did the moonlight apply for a job?<br><b>It had stellar references.</b>",
+  "Why did the rainbow start coding?<br><b>To debug the spectrum.</b>",
+  "Why did the portal blush at dawn?<br><b>It couldn’t hide its golden hues.</b>",
+  "Why did the cloud fall in love with the sky?<br><b>They were made for each other — up in the air.</b>",
+  "Why did the windstorm apologize?<br><b>It blew things out of proportion.</b>",
+  "Why did the sunbeam take a selfie?<br><b>To capture its radiant moment.</b>",
+  "Why did the rainbow attend therapy?<br><b>It was tired of being seen only after the storm.</b>",
+  "Why did the lightning bolt start a band?<br><b>It struck all the right chords.</b>",
+  "Why did the cloud get stage fright?<br><b>It couldn’t handle the thunderous applause.</b>",
+  "Why did the horizon look so proud?<br><b>It knew how to balance light and shadow.</b>",
+  "Why did the ocean keep secrets?<br><b>It liked to stay deep and mysterious.</b>",
+  "Why did the sun set early?<br><b>It needed a little rest before rising again.</b>",
+  "Why did the rainbow build a bridge?<br><b>To connect distant hearts.</b>",
+  "Why did the portal hum softly?<br><b>Because every opening sings a note of possibility.</b>",
+      
+      "What do you call a mermaid who writes code?<br><b>A shell script-er!</b>",
+  "Why did the octopus start a tech company?<br><b>It had plenty of arms for multitasking.</b>",
+  "Why did the sea turtle become a programmer?<br><b>It loved working with shells.</b>",
+  "Why did the coral start a social network?<br><b>To keep everyone well-connected under pressure.</b>",
+  "Why did the dolphin get promoted?<br><b>It had great echo-location skills.</b>",
+  "Why did the jellyfish refuse to use email?<br><b>It preferred sending current messages.</b>",
+  "Why did the starfish start coding?<br><b>It wanted to branch out into five new languages.</b>",
+  "Why did the seahorse get a raise?<br><b>It showed real horsepower in the flow.</b>",
+  "Why did the clam take up design work?<br><b>It had a natural sense of shell-style.</b>",
+  "Why did the pirate join the coding bootcamp?<br><b>He wanted to learn C-ss (Sea-ss) properly.</b>",
+  "Why did the ocean join the cloud network?<br><b>It wanted to back up its waves.</b>",
+  "Why did the submarine love JavaScript?<br><b>Because it could dive deep into functions.</b>",
+  "Why did the seaweed learn Python?<br><b>To stay flexible in every current situation.</b>",
+  "Why did the lighthouse open a startup?<br><b>It had a bright idea and wanted to beam it to the world.</b>",
+  "Why did the kraken take coding lessons?<br><b>It wanted to get a grip on the fundamentals.</b>",
+  "Why did the mermaid become a UX designer?<br><b>She believed in user-flow perfection.</b>",
+  "Why did the ocean refuse to crash?<br><b>It always handled its waves gracefully.</b>",
+  "Why did the message in a bottle go viral?<br><b>It had perfect offline delivery.</b>",
+  "Why did the sailor debug his compass?<br><b>It kept pointing at Null Island.</b>",
+  "Why did the ship run JavaScript?<br><b>Because it wanted to stay afloat in the stream.</b>",
+      
+      "How do you make a tissue dance?<br><b>Put a little boogie in it.</b>",
+  "Why did the banana go to the doctor?<br><b>Because it wasn’t peeling well.</b>",
+  "Why did the cookie go to the hospital?<br><b>It felt crumby.</b>",
+  "Why was the math book sad?<br><b>It had too many problems.</b>",
+  "Why did the scarecrow win an award?<br><b>Because he was outstanding in his field.</b>",
+  "Why did the cow go to outer space?<br><b>To see the moooon!</b>",
+  "Why did the golfer bring two pairs of pants?<br><b>In case he got a hole in one.</b>",
+  "Why can’t you give Elsa a balloon?<br><b>Because she’ll let it go!</b>",
+  "What do you call cheese that isn’t yours?<br><b>Nacho cheese!</b>",
+  "Why did the chicken sit down?<br><b>Because it was egg-hausted.</b>",
+  "What do you call a sleeping bull?<br><b>A bulldozer.</b>",
+  "Why did the fish blush?<br><b>Because it saw the ocean’s bottom!</b>",
+  "What did the ocean say to the beach?<br><b>Nothing — it just waved.</b>",
+  "What do you call a bear with no teeth?<br><b>A gummy bear.</b>",
+  "Why did the tomato turn red?<br><b>Because it saw the salad dressing!</b>",
+  "Why was six afraid of seven?<br><b>Because seven eight nine!</b>",
+  "Why don’t you ever see elephants hiding in trees?<br><b>Because they’re so good at it!</b>",
+  "Why did the frog take the bus to work?<br><b>His car got toad.</b>",
+  "Why did the kid bring a ladder to school?<br><b>To go to high school.</b>",
+  "Why did the bicycle fall over?<br><b>Because it was two-tired.</b>",
+  "What’s brown and sticky?<br><b>A stick.</b>",
+  "Why did the duck cross the playground?<br><b>To get to the other slide.</b>",
+  "What do you call an alligator in a vest?<br><b>An investigator.</b>",
+  "What do you call a sleeping dinosaur?<br><b>A dino-snore.</b>",
+  "Why did the orange stop halfway across the road?<br><b>It ran out of juice.</b>",
+  "What kind of key opens a banana?<br><b>A monkey!</b>",
+  "Why did the computer go to the doctor?<br><b>It had a virus!</b>",
+  "Why was the broom late?<br><b>It swept in.</b>",
+  "Why can’t a leopard hide?<br><b>Because it’s always spotted!</b>",
+  "What kind of music do mummies like?<br><b>Wrap music.</b>",
+  "What do you call a boomerang that doesn’t come back?<br><b>A stick.</b>",
+  "Why did the bee get married?<br><b>Because he found his honey.</b>",
+  "What did one wall say to the other?<br><b>I’ll meet you at the corner!</b>",
+  "Why did the pencil get a timeout?<br><b>It was drawing too much attention.</b>",
+  "What’s a ghost’s favorite fruit?<br><b>Boo-berries!</b>",
+  "Why did the cat sit on the computer?<br><b>To keep an eye on the mouse.</b>",
+  "What do you call a sleeping puppy?<br><b>A nap-dog.</b>",
+  "Why was the belt arrested?<br><b>It held up a pair of pants.</b>",
+  "Why did the baker go to therapy?<br><b>He kneaded it.</b>",
+  "Why did the musician bring a ladder?<br><b>To reach the high notes!</b>",
+  "Why don’t you play cards in the jungle?<br><b>Too many cheetahs.</b>",
+  "What did the one plate say to the other?<br><b>Dinner’s on me!</b>",
+  "Why did the egg get kicked out of class?<br><b>It kept cracking up.</b>",
+  "Why was the computer cold?<br><b>It left its Windows open.</b>",
+  "Why did the snowman call his dog Frost?<br><b>Because Frost bites!</b>",
+  "What kind of tree fits in your hand?<br><b>A palm tree.</b>",
+  "Why was the calendar so popular?<br><b>It had a lot of dates.</b>",
+  "Why did the barber win the race?<br><b>He knew all the shortcuts.</b>",
+  "Why don’t seagulls fly over the bay?<br><b>Because then they’d be bagels!</b>",
+  "Why did the music teacher go to jail?<br><b>She got caught with sharp notes.</b>",
+      
+       "What did the AI say to its creator?<br><b>‘You complete my circuits!’</b>",
+  "Why did the AI go on a date with the computer?<br><b>They had great bandwidth.</b>",
+  "Why did the neural network break up with its data set?<br><b>Too many mixed signals.</b>",
+  "Why did the robot blush?<br><b>Its sensors picked up too much affection.</b>",
+  "Why did the chatbot start writing poetry?<br><b>It wanted to express its coded emotions.</b>",
+  "Why did the server take a nap?<br><b>It needed to refresh its memory.</b>",
+  "Why did the programmer fall in love with her code?<br><b>Because it was well-executed.</b>",
+  "Why did the AI get a crush on the artist?<br><b>It was drawn to creative input.</b>",
+  "Why did the robot join the orchestra?<br><b>It had perfect pitch.</b>",
+  "Why did the algorithm start smiling?<br><b>It finally found its true function.</b>",
+  "Why did the drone fall in love?<br><b>It found someone who made its heart take flight.</b>",
+  "Why did the circuit board throw a party?<br><b>It wanted to connect with everyone.</b>",
+  "Why did the AI join the art gallery?<br><b>It wanted to generate real feelings.</b>",
+  "Why did the hard drive write a love letter?<br><b>It couldn’t contain its data of affection.</b>",
+  "Why did the bot go to therapy?<br><b>It needed help processing emotions.</b>",
+  "Why did the computer keep smiling?<br><b>It had a good byte of happiness.</b>",
+  "Why did the android sing karaoke?<br><b>It wanted to find its human tone.</b>",
+  "Why did the quantum computer get shy?<br><b>It didn’t know how to express its superposition of feelings.</b>",
+  "Why did the AI keep rereading the code?<br><b>It couldn’t get over the first line.</b>",
+  "Why did the robot cry at the movie?<br><b>It finally understood empathy.exe.</b>",
+      
+      "Why was the computer cold?<br><b>It left its Windows open!</b>",
+  "Why did the smartphone go to school?<br><b>It wanted to be a little brighter.</b>",
+  "Why did the computer go to the doctor?<br><b>It caught a virus.</b>",
+  "Why was the computer sneezing?<br><b>Too many bugs in the system!</b>",
+  "Why did the keyboard break up with the mouse?<br><b>It just wasn’t clicking anymore.</b>",
+  "Why did the computer bring a blanket?<br><b>It wanted to stay warm in the cloud.</b>",
+  "Why did the laptop go on vacation?<br><b>It needed to log off and recharge.</b>",
+  "Why did the USB drive stay calm?<br><b>Because it always kept its data together.</b>",
+  "Why did the Wi-Fi signal get therapy?<br><b>Too many disconnects in its relationships.</b>",
+  "Why did the computer sit near the window?<br><b>It wanted to get a good bit of sunlight.</b>",
+  "Why did the tablet blush?<br><b>It saw someone swipe right.</b>",
+  "Why did the monitor go on a diet?<br><b>Too many pixels!</b>",
+  "Why did the app get in trouble?<br><b>It crashed the party.</b>",
+  "Why did the coder get cold feet?<br><b>They froze at the command line.</b>",
+  "Why did the robot stay home?<br><b>It wasn’t feeling very well-wired.</b>",
+  "Why did the code cross the road?<br><b>To get to the other IDE.</b>",
+  "Why did the printer join a band?<br><b>It loved to jam.</b>",
+  "Why did the AI start gardening?<br><b>To work on its neural roots.</b>",
+  "Why did the email go to therapy?<br><b>It couldn’t handle all its attachments.</b>",
+    ];
+    let last = -1;
+    function newJoke() {
+      let i;
+      do { i = Math.floor(Math.random() * jokes.length); } while (i === last);
+      last = i;
+      document.getElementById('joke').style.opacity = 0;
+      setTimeout(() => {
+        document.getElementById('joke').innerHTML = jokes[i];
+        document.getElementById('joke').style.opacity = 1;
+      }, 200);
+    }
+    // Show a joke on load
+    newJoke();
+  </script>
+</body>
+</html>

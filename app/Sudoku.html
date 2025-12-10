@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sudoku – Vanilla JS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+/* -------------------------------------------------------
+   BASE PAGE STYLING
+--------------------------------------------------------*/
+body {
+  margin:14px;
+  font-family: Arial, sans-serif;
+  background: #eef3ff;
+  transition: background .3s, color .3s;
+}
+
+body.dark {
+  background: #1e1e1e;
+  color: #ddd;
+}
+
+h1 {
+  text-align: center;
+  padding: 7px 0;
+  margin: 0;
+}
+
+/* -------------------------------------------------------
+   SIDEBAR MENU
+--------------------------------------------------------*/
+#sidebar {
+  position: relative;  /* or absolute inside a relative parent */
+  left: 0;
+  top: 0;
+  width: 222px;
+  float: left;
+
+  height: 100vh;
+  background: #345;
+  color: #fff;
+  padding: 11px;
+  transition: left .3s;
+  z-index: 1000;
+}
+#sidebar.open { left: 0; }
+#sidebar h2 { margin-top: 0; }
+
+#sidebar button, #sidebar select {
+  width: 100%;
+  padding: 8px;
+  margin: 11px 0;
+  border: none;
+  border-radius: 7px;
+  font-size: 1rem;
+}
+
+#menuBtn {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+/* -------------------------------------------------------
+   BOARD GRID
+--------------------------------------------------------*/
+
+#board {
+  width: 90vw;
+  max-width: 450px;
+  margin: 20px auto;
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  border: 3px solid #222;
+}
+
+.cell {
+  border: 1px solid #888;
+  width: 100%;
+  padding: 0;
+  text-align: center;
+  font-size: 1.3rem;
+  aspect-ratio: 1/1;
+}
+
+.cell.locked {
+  background: #dde6ff;
+  font-weight: bold;
+}
+
+.cell.conflict {
+  background: #ffdddd !important;
+}
+
+.cell:focus {
+  outline: 2px solid #4f8;
+}
+
+/* Thicker lines for boxes */
+.cell:nth-child(3n+1) {
+  border-left: 3px solid #222;
+}
+.cell:nth-child(9n) {
+  border-right: 3px solid #222;
+}
+#board .cell:nth-child(n+1):nth-child(-n+9) {
+  border-top: 3px solid #222;
+}
+#board .cell:nth-last-child(-n+9) {
+  border-bottom: 3px solid #222;
+}
+
+/* -------------------------------------------------------
+   BUTTONS
+--------------------------------------------------------*/
+.controls {
+  text-align: center;
+  margin-top: 3px;
+}
+button {
+  margin: 3px;
+  padding: 3px 3px;
+  font-size: .5rem;
+  border: none;
+  border-radius: 7px;
+  background: #4c6ef5;
+  color: white;
+  cursor: pointer;
+}
+button:hover { background: #6b8cff; }
+
+/* -------------------------------------------------------
+   MOBILE NUMBER PAD
+--------------------------------------------------------*/
+#numpad {
+  display: none;
+  position: flex;
+  bottom: 1px;
+  left: 3px; right: 1px;
+  background: #fff;
+  border-top: 1px solid #444;
+  padding: 1px;
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 0px;
+}
+
+#numpad button {
+  background: #eee;
+  color: #222;
+  font-size: .3rem;
+}
+
+body.dark #numpad { background: #111; }
+body.dark #numpad button { background: #333; color: #eee; }
+
+@media (max-width: 333px) {
+  #numpad { display: grid; }
+}
+
+</style>
+</head>
+<body>
+<div id="loading">🧩 Generating a unique puzzle…</div>
+
+<div class="sudoku-shell">
+  <div class="s-header">
+    <div>
+      <div class="s-title">Sudoku</div>
+      <div class="s-sub">Tap a cell, then use your keyboard or the number bar.</div>
+    </div>
+    <div class="s-pill">
+      Unique-solution ·<br/>New puzzle each game
+    </div>
+  </div>
+
+  <div class="s-layout">
+    <aside class="s-sidebar">
+      <h3>Settings</h3>
+      <label for="difficulty">Difficulty</label>
+      <select id="difficulty">
+        <option value="easy">Easy</option>
+        <option value="medium" selected>Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+      <button class="btn-primary" id="newGameBtn">New Game</button>
+      <button class="btn-secondary" id="resetBtn">Reset Board</button>
+      <button class="btn-secondary" id="darkBtn">Toggle Dark Mode</button>
+      <p>
+        Each puzzle is generated from scratch and checked so it has
+        exactly one valid solution.
+      </p>
+    </aside>
+
+    <main class="s-main">
+      <div id="boardWrap">
+        <div id="board" aria-label="9 by 9 Sudoku grid"></div>
+      </div>
+      <div class="controls">
+        <button id="checkBtn">Check</button>
+        <button id="hintBtn">Hint</button>
+        <button id="clearBtn">Clear Cell</button>
+      </div>
+      <div class="status" id="statusText">New puzzle loading…</div>
+    </main>
+  </div>
+
+  <div id="numpad" aria-label="Number bar"></div>
+</div>
+
+<script>
+  const qs = s => document.querySelector(s);
+
+  const boardEl   = qs('#board');
+  const statusEl  = qs('#statusText');
+  const loadingEl = qs('#loading');
+
+  let puzzle = [];
+  let solution = [];
+  let current = [];
+  let focusedCell = null;
+
+  /* ---------- SUDOKU CORE ---------- */
+
+  function copyBoard(b){ return b.map(row => row.slice()); }
+
+  function isValid(board,row,col,val){
+    for(let i=0;i<9;i++){
+      if(board[row][i] === val) return false;
+      if(board[i][col] === val) return false;
+    }
+    const br = Math.floor(row/3)*3;
+    const bc = Math.floor(col/3)*3;
+    for(let r=br;r<br+3;r++){
+      for(let c=bc;c<bc+3;c++){
+        if(board[r][c] === val) return false;
+      }
+    }
+    return true;
+  }
+
+  function generateSolvedBoard(){
+    const b = Array.from({length:9}, () => Array(9).fill(0));
+
+    function fill(r,c){
+      if(r === 9) return true;
+      const nr = (c === 8) ? r+1 : r;
+      const nc = (c === 8) ? 0   : c+1;
+
+      const nums = [1,2,3,4,5,6,7,8,9];
+      for(let i=nums.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [nums[i],nums[j]] = [nums[j],nums[i]];
+      }
+
+      for(const v of nums){
+        if(isValid(b,r,c,v)){
+          b[r][c] = v;
+          if(fill(nr,nc)) return true;
+          b[r][c] = 0;
+        }
+      }
+      return false;
+    }
+
+    fill(0,0);
+    return b;
+  }
+
+  // backtracking solver just to count solutions
+  function findEmptySpot(b){
+    for(let r=0;r<9;r++){
+      for(let c=0;c<9;c++){
+        if(b[r][c] === 0) return [r,c];
+      }
+    }
+    return null;
+  }
+
+  function countSolutions(board){
+    let count = 0;
+
+    function solve(){
+      if(count > 1) return;
+      const spot = findEmptySpot(board);
+      if(!spot){ count++; return; }
+      const [r,c] = spot;
+      for(let v=1;v<=9;v++){
+        if(isValid(board,r,c,v)){
+          board[r][c] = v;
+          solve();
+          board[r][c] = 0;
+        }
+      }
+    }
+    solve();
+    return count;
+  }
+
+  function makePuzzleFromSolution(solved,difficulty){
+    const p = copyBoard(solved);
+    let holes = (difficulty === 'easy') ? 35 :
+                (difficulty === 'medium') ? 50 : 60;
+
+    const order = [...Array(81).keys()];
+    for(let i=order.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [order[i],order[j]] = [order[j],order[i]];
+    }
+
+    for(const idx of order){
+      if(holes <= 0) break;
+      const r = Math.floor(idx/9);
+      const c = idx % 9;
+      if(p[r][c] === 0) continue;
+
+      const backup = p[r][c];
+      p[r][c] = 0;
+
+      const testBoard = copyBoard(p);
+      if(countSolutions(testBoard) !== 1){
+        p[r][c] = backup; // keep cell
+      }else{
+        holes--;
+      }
+    }
+    return p;
+  }
+
+  /* ---------- RENDERING ---------- */
+
+  function renderBoard(){
+    boardEl.innerHTML = '';
+    for(let r=0;r<9;r++){
+      for(let c=0;c<9;c++){
+        const input = document.createElement('input');
+        input.setAttribute('inputmode','numeric');
+        input.setAttribute('maxlength','1');
+        input.className = 'cell';
+        input.dataset.r = r;
+        input.dataset.c = c;
+
+        const val = puzzle[r][c];
+        if(val !== 0){
+          input.value = val;
+          input.disabled = true;
+          input.classList.add('locked');
+        }else if(current[r][c] !== 0){
+          input.value = current[r][c];
+        }
+
+        input.addEventListener('focus', () => {
+          focusedCell = input;
+        });
+
+        input.addEventListener('input', () => {
+          handleCellInput(input);
+        });
+
+        boardEl.appendChild(input);
+      }
+    }
+    highlightConflicts();
+  }
+
+  function handleCellInput(cell){
+    const r = parseInt(cell.dataset.r,10);
+    const c = parseInt(cell.dataset.c,10);
+    const raw = cell.value.replace(/[^1-9]/g,'');
+    cell.value = raw;
+    current[r][c] = raw ? parseInt(raw,10) : 0;
+    highlightConflicts();
+  }
+
+  function highlightConflicts(){
+    document.querySelectorAll('.cell').forEach(el=>el.classList.remove('conflict'));
+    for(let r=0;r<9;r++){
+      for(let c=0;c<9;c++){
+        const val = current[r][c];
+        if(!val) continue;
+
+        // row/col
+        for(let i=0;i<9;i++){
+          if(i!==c && current[r][i] === val) mark(r,i);
+          if(i!==r && current[i][c] === val) mark(i,c);
+        }
+        // box
+        const br = Math.floor(r/3)*3;
+        const bc = Math.floor(c/3)*3;
+        for(let rr=br;rr<br+3;rr++){
+          for(let cc=bc;cc<bc+3;cc++){
+            if(rr===r && cc===c) continue;
+            if(current[rr][cc] === val) mark(rr,cc);
+          }
+        }
+      }
+    }
+    function mark(r,c){
+      const el = qs(`.cell[data-r="${r}"][data-c="${c}"]`);
+      if(el) el.classList.add('conflict');
+    }
+  }
+
+  /* ---------- GAME CONTROL ---------- */
+
+  function startNewGame(){
+    const diff = qs('#difficulty').value || 'medium';
+    loadingEl.style.display = 'flex';
+    statusEl.textContent = 'Generating puzzle…';
+
+    setTimeout(() => {
+      solution = generateSolvedBoard();
+      puzzle   = makePuzzleFromSolution(solution,diff);
+      current  = copyBoard(puzzle);
+      renderBoard();
+      statusEl.textContent = `Difficulty: ${diff[0].toUpperCase()+diff.slice(1)} — Good luck.`;
+      loadingEl.style.display = 'none';
+    }, 30);
+  }
+
+  function resetBoard(){
+    current = copyBoard(puzzle);
+    renderBoard();
+    statusEl.textContent = 'Board reset to starting puzzle.';
+  }
+
+  function checkSolution(){
+    for(let r=0;r<9;r++){
+      for(let c=0;c<9;c++){
+        if(current[r][c] !== solution[r][c]){
+          statusEl.textContent = 'There are still mistakes. Keep going!';
+          statusEl.style.color = '#b45309';
+          return;
+        }
+      }
+    }
+    statusEl.textContent = '✔ Beautiful work — puzzle solved!';
+    statusEl.style.color = '#16a34a';
+  }
+
+  function giveHint(){
+    const empties = [];
+    for(let r=0;r<9;r++){
+      for(let c=0;c<9;c++){
+        if(current[r][c] === 0){
+          empties.push([r,c]);
+        }
+      }
+    }
+    if(!empties.length){
+      statusEl.textContent = 'No empty cells left to hint.';
+      return;
+    }
+    const [r,c] = empties[Math.floor(Math.random()*empties.length)];
+    current[r][c] = solution[r][c];
+    const cell = qs(`.cell[data-r="${r}"][data-c="${c}"]`);
+    if(cell){
+      cell.value = solution[r][c];
+      cell.classList.add('hint');
+      cell.focus();
+    }
+    highlightConflicts();
+    statusEl.textContent = 'Hint placed — follow its lead.';
+    statusEl.style.color = '#0f766e';
+  }
+
+  function clearFocusedCell(){
+    if(!focusedCell || focusedCell.disabled) return;
+    const r = parseInt(focusedCell.dataset.r,10);
+    const c = parseInt(focusedCell.dataset.c,10);
+    current[r][c] = 0;
+    focusedCell.value = '';
+    focusedCell.classList.remove('hint');
+    highlightConflicts();
+  }
+
+  /* ---------- NUMPAD & KEYBOARD ---------- */
+
+  function buildNumpad(){
+    const np = qs('#numpad');
+    np.innerHTML = '';
+    for(let i=1;i<=9;i++){
+      const b = document.createElement('button');
+      b.textContent = i;
+      b.addEventListener('click', () => {
+        if(!focusedCell || focusedCell.disabled) return;
+        focusedCell.value = String(i);
+        focusedCell.dispatchEvent(new Event('input',{bubbles:true}));
+        focusedCell.focus();
+      });
+      np.appendChild(b);
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if(!focusedCell) return;
+    if(focusedCell.disabled) return;
+
+    if(e.key >= '1' && e.key <= '9'){
+      focusedCell.value = e.key;
+      focusedCell.dispatchEvent(new Event('input',{bubbles:true}));
+    }else if(['Backspace','Delete','0'].includes(e.key)){
+      clearFocusedCell();
+    }
+  });
+
+  /* ---------- UI WIRES ---------- */
+
+  qs('#newGameBtn').addEventListener('click', startNewGame);
+  qs('#resetBtn').addEventListener('click', resetBoard);
+  qs('#checkBtn').addEventListener('click', checkSolution);
+  qs('#hintBtn').addEventListener('click', giveHint);
+  qs('#clearBtn').addEventListener('click', clearFocusedCell);
+
+  qs('#darkBtn').addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+  });
+
+  buildNumpad();
+  startNewGame();
+</script>
+</body>
+</html>
